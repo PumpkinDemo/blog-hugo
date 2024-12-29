@@ -1,0 +1,82 @@
+baseURL: http://example.org/
+defaultContentLanguage: en
+languageCode: en
+title: 千里茫茫若梦
+theme: doit
+
+params:
+  version: 0.2.X
+  author: 
+    name: ppk
+  page:
+    code:
+      maxShownLines: 20
+      lineNos: false
+    toc: 
+      enable: true
+      auto: false
+      keepStatic: false
+    math:
+      enable: true
+      copyTex: true
+
+menu:
+  main:
+    - identifier: posts
+      pre: ""
+      post: ""
+      name: Posts
+      url: /posts/
+      title: ""
+      weight: 1
+
+    - identifier: tags
+      pre: ""
+      post: ""
+      name: Tags
+      url: /tags/
+      title: ""
+      weight: 2
+    
+    - identifier: categories
+      pre: ""
+      post: ""
+      name: Categories
+      url: /categories/
+      title: ""
+      weight: 3
+    
+    - identifier: about
+      pre: ""
+      post: ""
+      name: About
+      url: /about/
+      title: ""
+      weight: 4
+
+markup:
+  tableOfContents:
+    startLevel: 2
+    endLevel: 6
+  
+  highlight:
+    lineNos: false
+    noClasses: false
+    codeFences: true
+    guessSyntax: false
+
+  goldmark:
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+            - - \[
+              - \]
+            - - $$
+              - $$
+          inline:
+            - - \(
+              - \)
+            - - $
+              - $
